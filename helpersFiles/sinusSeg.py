@@ -28,7 +28,8 @@ def sinusSeg(pathToNifti):
     # thresholds = threshold_local(ctData, block_size=301)
     sinusSegmentation = ctData < -900
 
-    sinusSegmentation[:, int(4*ctData.shape[1]/5): , :] = 0
+    sinusSegmentation[:, int(3*ctData.shape[1]/4): , :] = 0
+    # sinusSegmentation[:, int(4*ctData.shape[1]/5): , :] = 0
     largestConnectedComponent = label(sinusSegmentation, connectivity=2)
     bins = np.bincount(largestConnectedComponent.flat, weights=sinusSegmentation.flat)
     bins[bins.argmax()] = -np.inf
@@ -37,7 +38,7 @@ def sinusSeg(pathToNifti):
     nib.save(nib.Nifti1Image(largestCC, None), f'/Users/elilevinkopf/Documents/Ex23A/FinalProject/sinusSegmantation/{caseIdx}') 
 
 
-for i in range(29):
+for i in range(24, 25):
     path = f'/Users/elilevinkopf/Documents/Ex23A/FinalProject/ctScanNiftiFiles/case#{i}.nii.gz'
     if os.path.isfile(path):
         sinusSeg(path)
