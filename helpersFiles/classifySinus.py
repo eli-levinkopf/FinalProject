@@ -21,17 +21,17 @@ def sinusClassification(sinusSegPath):
     res = np.count_nonzero(intesection)/np.count_nonzero(union)
     print(res)
 
-    if res > SYMMETRY_TH: # in this case we assume that the seg is a symetric
-        if np.count_nonzero(sinusSeg) > TWO_HEALTHY_TH: # 2 sinuses are healthy
+    if res > SYMMETRY_TH: # in this case we assume this is a symmetric segmentation
+        if np.count_nonzero(sinusSeg) > TWO_HEALTHY_TH: # both sinuses are healthy
             print("right sinus: healthy, left sinus: healthy")
-        else: # 2 sinuses are sick
+        else: # both sinuses are sick
             print("right sinus: sick, left sinus: sick")
 
-    else: # in this case we assume that the seg is not a symetric
+    else: # in this case we assume asymmetric segmentation
         if np.count_nonzero(sinusSeg) <= SINGLE_HEALTHY_SINUS_TH: 
             print("right sinus: sick, left sinus: sick")
 
-        else: # in this case we assume that only one sinus is healthy.
+        else: # in this case we assume that only one of the sinuses is healthy.
             if np.count_nonzero(leftSeg) <= np.count_nonzero(rightSeg):
                 print("right sinus: healthy, left sinus: sick")
             else:
