@@ -23,7 +23,8 @@ def postProcessing(imgToProcess):
 
 def sinusSeg(pathToNifti):
     caseIdx = pathToNifti.split('/')[-1].split('.')[0]
-    niftiFile = loadFile(pathToNifti, caseIdx)
+    # niftiFile = loadFile(pathToNifti, caseIdx)
+    niftiFile = nib.load(pathToNifti)
     ctData= niftiFile.get_fdata()
     # thresholds = threshold_local(ctData, block_size=301)
     sinusSegmentation = ctData < -900
@@ -35,12 +36,33 @@ def sinusSeg(pathToNifti):
     bins[bins.argmax()] = -np.inf
     largestCC = (largestConnectedComponent == bins.argmax()).astype(float)
 
-    nib.save(nib.Nifti1Image(largestCC, None), f'/Users/elilevinkopf/Documents/Ex23A/FinalProject/sinusSegmantation/{caseIdx}') 
+    nib.save(nib.Nifti1Image(largestCC, None), f'/Users/elilevinkopf/Documents/Ex23A/FinalProject/sinusSeg/{caseIdx}') 
 
 
-for i in range(24, 25):
-    path = f'/Users/elilevinkopf/Documents/Ex23A/FinalProject/ctScanNiftiFiles/case#{i}.nii.gz'
+
+def resizeScan():
+    """
+    resize the scan to uniform size (116, 116, 76) and save it to downSampledScans folder.
+    """
+    for i in range(35):
+        path = f'/Users/elilevinkopf/Documents/Ex23A/FinalProject/downSampledFiles/case#{i}.nii.gz'
+        if os.path.isfile(path):
+            ctScan = nib.load(path).get_fdata()
+            shape = ctScan.shape
+            if (shape[0] < 116 or shape[1] < 116 or shape[2] < 76):
+                 continue
+            ctScan = ctScan[int((shape[0] - 116)/2):int(-np.ceil((shape[0] - 116)/2)), int((shape[1] - 116)/2):int(-np.ceil((shape[1] - 116)/2)), int((shape[2] - 76)/2):int(-np.ceil((shape[2] - 76)/2))]
+            nib.save(nib.Nifti1Image(ctScan, None), f'/Users/elilevinkopf/Documents/Ex23A/FinalProject/downSampledScans/case#{i}.nii.gz')
+
+
+
+# resizeScan()
+
+for i in range(35):
+    path = f'/Users/elilevinkopf/Documents/Ex23A/FinalProject/downSampledScans/case#{i}.nii.gz'
     if os.path.isfile(path):
         sinusSeg(path)
 
-# sinusSeg('/Users/elilevinkopf/Documents/Ex23A/FinalProject/ctScanNiftiFiles/case#5.nii.gz')
+
+# sinusSeg('/Users/elilevinkopf/Documents/Ex23A/FinalProject/ctScanNiftiFiles/case#5.nii.gz')\
+
