@@ -2,25 +2,49 @@ import numpy as np
 from sklearn.ensemble import AdaBoostClassifier
 from modelHelper import*
 
-def classify(pathToFolder):
-    trainY = np.array([2, 2, 2, 2, 2, 2, 3, 3, 3, 2, 2, 2, 1, 1, 1, 2, 2, 2, 0, 0, 0, 1, 1, 1, 1, 1, 1, 2, 2, 2, 1, 1, 1, 3, 3, 3])
-    # trainY = np.array([2, 2, 2, 2, 3, 3, 2, 2, 1, 1, 2, 2, 0, 0, 1, 1, 1, 1, 2, 2, 1, 1, 3, 3])
-
-
+def classify2D(pathToFolder, axis):
+    trainY = np.repeat([2, 2, 3, 2, 1, 2, 0, 1, 1, 2, 1, 3], NUM_OF_SLICES)
 
     # create train set
     pathToTrain = pathToFolder+'/train'
-    trainX = getFeatures(pathToTrain, True)
+    trainX = getFeatures2D(pathToTrain, axis)
 
     # create test set
     pathToTest= pathToFolder+'/test'
-    testX = getFeatures(pathToTest, False)
+    testX = getFeatures2D(pathToTest, axis)
 
     AB = AdaBoostClassifier()
+    AB.fit(trainX, trainY)
+    testY = AB.predict(testX)
+
+    testPredictions = []
+
+    for i in range(len(testY)//NUM_OF_SLICES):
+        testPredictions.append(np.bincount(testY[i*NUM_OF_SLICES:i*NUM_OF_SLICES+NUM_OF_SLICES]).argmax())
+    
+    print(f'axis {axis}: ', testPredictions)
+    print([classes[x] for x in testPredictions])
+
+
+def classify3D(pathToFolder):
+    trainY = np.repeat([2, 2, 3, 2, 1, 2, 0, 1, 1, 2, 1, 3], 1)
+
+    # create train set
+    pathToTrain = pathToFolder+'/train'
+    trainX = getFeatures3D(pathToTrain)
+
+    # create test set
+    pathToTest= pathToFolder+'/test'
+    testX = getFeatures3D(pathToTest)
+
+    AB = RandomForestClassifier()
     AB.fit(trainX, trainY)
     testY = AB.predict(testX)
     
     print(testY)
     print([classes[x] for x in testY])
 
-classify('/Users/elilevinkopf/Documents/Ex23A/FinalProject/validForRF')
+
+# classify3D('/Users/elilevinkopf/Documents/Ex23A/FinalProject/validForRF')
+classify2D('/Users/elilevinkopf/Documents/Ex23A/FinalProject/validForRF', axis='A')
+classify2D('/Users/elilevinkopf/Documents/Ex23A/FinalProject/validForRF', axis='C')

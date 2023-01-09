@@ -16,19 +16,41 @@ from modelHelper import*
 
 
 
-def classify(pathToFolder):
-    # trainY = np.array([2, 2, 3, 2, 1, 2, 0, 1, 1, 2, 1, 3])
-    trainY = np.array([2, 2, 2, 2, 2, 2, 3, 3, 3, 2, 2, 2, 1, 1, 1, 2, 2, 2, 0, 0, 0, 1, 1, 1, 1, 1, 1, 2, 2, 2, 1, 1, 1, 3, 3, 3])
-    # trainY = np.array([2, 2, 2, 2, 3, 3, 2, 2, 1, 1, 2, 2, 0, 0, 1, 1, 1, 1, 2, 2, 1, 1, 3, 3])
-
+def classify2D(pathToFolder, axis):
+    trainY = np.repeat([2, 2, 3, 2, 1, 2, 0, 1, 1, 2, 1, 3], NUM_OF_SLICES)
 
     # create train set
     pathToTrain = pathToFolder+'/train'
-    trainX = getFeatures(pathToTrain, True)
+    trainX = getFeatures2D(pathToTrain, axis)
 
     # create test set
     pathToTest= pathToFolder+'/test'
-    testX = getFeatures(pathToTest, False)
+    testX = getFeatures2D(pathToTest, axis)
+
+    RF = RandomForestClassifier()
+    RF.fit(trainX, trainY)
+    testY = RF.predict(testX)
+
+    testPredictions = []
+
+    for i in range(len(testY)//NUM_OF_SLICES):
+        testPredictions.append(np.bincount(testY[i*NUM_OF_SLICES:i*NUM_OF_SLICES+NUM_OF_SLICES]).argmax())
+    
+    print(f'axis {axis}: ', testPredictions)
+    print([classes[x] for x in testPredictions])
+
+
+
+def classify3D(pathToFolder):
+    trainY = np.repeat([2, 2, 3, 2, 1, 2, 0, 1, 1, 2, 1, 3], 1)
+
+    # create train set
+    pathToTrain = pathToFolder+'/train'
+    trainX = getFeatures3D(pathToTrain)
+
+    # create test set
+    pathToTest= pathToFolder+'/test'
+    testX = getFeatures3D(pathToTest)
 
     RF = RandomForestClassifier()
     RF.fit(trainX, trainY)
@@ -38,8 +60,8 @@ def classify(pathToFolder):
     print([classes[x] for x in testY])
 
 
+classify2D('/Users/elilevinkopf/Documents/Ex23A/FinalProject/validForRF', axis='A')
+classify2D('/Users/elilevinkopf/Documents/Ex23A/FinalProject/validForRF', axis='C')
 
-classify('/Users/elilevinkopf/Documents/Ex23A/FinalProject/validForRF')
-# sinusSeg=  nib.load('/Users/elilevinkopf/Documents/Ex23A/FinalProject/sinusSeg/case#3.nii').get_fdata()
-# createMoreSampels(sinusSeg)
+# classify3D('/Users/elilevinkopf/Documents/Ex23A/FinalProject/validForRF')
     

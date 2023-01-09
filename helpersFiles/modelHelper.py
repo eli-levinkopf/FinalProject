@@ -5,30 +5,57 @@ import numpy as np
 import scipy.ndimage as ndi
 import os
 from sklearn.ensemble import RandomForestClassifier
-from classifySinus import getCorrelate
+from classifySinus import getCorrelate, getCorrelate2D
 from skimage.measure import label, regionprops, regionprops_table
 import pandas as pd
 import re
 from pandas_profiling import ProfileReport
+
+NUM_OF_SLICES = 25
+
+properties = [                                      'centroid',
+                                                    'axis_major_length',
+                                                    # 'axis_minor_length',
+                                                    'area',
+                                                    # 'area_convex',
+                                                    # 'area_filled',
+                                                    # 'area_bbox',
+                                                    # 'equivalent_diameter_area',
+                                                    # 'euler_number',
+                                                    # 'feret_diameter_max',
+                                                    'orientation',
+                                                    ]
+properties1 = ['centroid_x',
+                                                    'centroid_y',
+                                                    'axis_major_length',
+                                                    'axis_minor_length',
+                                                    'area',
+                                                    'area_convex',
+                                                    'area_filled',
+                                                    'area_bbox',
+                                                    'equivalent_diameter_area',
+                                                    'euler_number',
+                                                    'feret_diameter_max',
+                                                    'orientation',
+                                                     'correlation']
 
 
 
 classes = {0: 'both healthy', 1: 'both sick', 2: 'left sick right healthy', 3: 'left healthy right sick'}
 
 
-def createMoreSampels(sinusSeg):
+def create2DSampelsA(sinusSeg):
     sampels = []
-    shape = sinusSeg.shape
-    # for i in range(3):
-    #     if i == 0:
-    #         sampels.append(sinusSeg[:, :int(0.4*shape[1]), :])
-    #     elif i == 1:
-    #         sampels.append(sinusSeg[:, int(0.4*shape[1]):int(0.6*shape[1]), :])
-    #     else:
-    #         sampels.append(sinusSeg[:, int(0.6*shape[1]):, :])
+    for i in range(NUM_OF_SLICES):
+        sampels.append(sinusSeg[:, :, i])
+    return sampels
 
-    return [sinusSeg, np.flip(sinusSeg, axis=1), np.flip(sinusSeg, axis=2)]
 
+def create2DSampelsC(sinusSeg):
+    sampels = []
+    for i in range(NUM_OF_SLICES):
+        sampels.append(sinusSeg[:, i+50, :])
+    return sampels
 
 
 def atoi(text):
@@ -37,55 +64,65 @@ def atoi(text):
 def natural_keys(text):
     return [ atoi(c) for c in re.split(r'(\d+)', text) ]
 
-def featureExtraction(sinusSegPath):
-    sinusSeg = nib.load(sinusSegPath).get_fdata()
-    # cx, cy, cz = ndi.center_of_mass(sinusSeg)
-    # countNoneZeros = np.count_nonzero(sinusSeg)
 
-
-def getFeatures(pathToFolder, train=True):
+def getFeatures2D(pathToFolder, axis):
     featuresMat = []
     for filename in sorted(os.listdir(pathToFolder), key=natural_keys):
         if filename == '.DS_Store':
             continue
         sinusSeg = nib.load(pathToFolder+ '/' + filename).get_fdata()
-        if train: 
-            subSampels = createMoreSampels(sinusSeg)
-        else:
-            subSampels = [sinusSeg]
+        
+        if axis == 'A':
+            subSampels = create2DSampelsA(sinusSeg)
+        elif axis == 'C':
+            subSampels = create2DSampelsC(sinusSeg)
+
         for sample in subSampels:
             label_img = label(sample)
-            props = regionprops_table(label_img, properties=('centroid',
-                                                    'axis_major_length',
-                                                    'axis_minor_length',
-                                                    'area',
-                                                    'equivalent_diameter_area',
-                                                    ))
-            
+            props = regionprops_table(label_img, properties=properties)
             props = pd.DataFrame(props)
-            props = props.to_numpy()[0]
-            props = np.delete(props, np.s_[1:3])
-            features = np.append(props, getCorrelate(sample)[0])
+            
+            if props.empty:
+                props = np.zeros(len(properties)+1)
+            else:
+                props = props.to_numpy()[0]
+
+            features = np.append(props, getCorrelate2D(sample)[0])
             featuresMat.append(features)
-            # featuresMat.append((sample[::16, ::16, ::16].flatten()))
+            
+            # featuresMat.append(sample.flatten())
+
     return np.array(featuresMat)
 
 
+def getFeatures3D(pathToFolder):
+    featuresMat = []
+    for filename in sorted(os.listdir(pathToFolder), key=natural_keys):
+        if filename == '.DS_Store':
+            continue
+        sinusSeg = nib.load(pathToFolder+ '/' + filename).get_fdata()
+        label_img = label(sinusSeg)
+        props = regionprops_table(label_img, properties=('centroid',
+                                                'axis_major_length',
+                                                'axis_minor_length',
+                                                'area',
+                                                'equivalent_diameter_area',
+                                                ))
+        
+        props = pd.DataFrame(props)
+        props = props.to_numpy()[0]
+        props = np.delete(props, np.s_[1:3])
+        features = np.append(props, getCorrelate(sinusSeg)[0])
+        featuresMat.append(features)
+
+    return np.array(featuresMat)
+
+# sinusSeg = nib.load('/Users/elilevinkopf/Documents/Ex23A/FinalProject/downSampledScans/case#3.nii.gz').get_fdata()
+# create2DSampels(sinusSeg)
 
 # mat = getFeatures('/Users/elilevinkopf/Documents/Ex23A/FinalProject/validForRF/train')
-# df = pd.DataFrame(mat, columns=['centroid_x',
-#                                                     'centroid_y',
-#                                                     'centroid_z',
-#                                                     'axis_major_length',
-#                                                     'axis_minor_length',
-#                                                     'area',
-#                                                     'area_convex',
-#                                                     'area_filled',
-#                                                     'area_bbox',
-#                                                     'equivalent_diameter_area',
-#                                                     'euler_number',
-#                                                     'feret_diameter_max', 'correlation'])
-# df['label'] = [2, 2, 2, 2, 2, 2, 3, 3, 3, 2, 2, 2, 1, 1, 1, 2, 2, 2, 0, 0, 0, 1, 1, 1, 1, 1, 1, 2, 2, 2, 1, 1, 1, 3, 3, 3]
+# df = pd.DataFrame(mat, columns=properties1)
+# df['label'] = np.repeat([2, 2, 3, 2, 1, 2, 0, 1, 1, 2, 1, 3], NUM_OF_SLICES)
 # profile = ProfileReport(df)
 # profile.to_file("output.html")
 # df.to_csv('/Users/elilevinkopf/Documents/Ex23A/FinalProject/featuresMat.csv')
