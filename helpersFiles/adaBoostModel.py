@@ -24,6 +24,7 @@ def classify2D(pathToFolder, axis):
     
     print(f'axis {axis}: ', testPredictions)
     print([classes[x] for x in testPredictions])
+    print(f1_score(y_true=np.array([0, 2, 1, 3]), y_pred=testPredictions, average='micro'))
 
 
 def classify3D(pathToFolder):
@@ -37,12 +38,14 @@ def classify3D(pathToFolder):
     pathToTest= pathToFolder+'/test'
     testX = getFeatures3D(pathToTest)
 
-    AB = RandomForestClassifier()
+    AB = AdaBoostClassifier()
     AB.fit(trainX, trainY)
     testY = AB.predict(testX)
     
     print(testY)
     print([classes[x] for x in testY])
+    # plotRocCurve(testY, 'AdaBoost 3D')
+    print(f1_score(y_true=np.array([0, 2, 1, 3]), y_pred=testY, average='micro'))
 
 
 # classify3D('/Users/elilevinkopf/Documents/Ex23A/FinalProject/validForRF')

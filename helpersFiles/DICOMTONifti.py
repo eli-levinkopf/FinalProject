@@ -22,6 +22,7 @@ def convertDicom2Nifti(pathToFolder):
 
 
 
+
 convertDicom2Nifti("/Users/elilevinkopf/Documents/Ex23A/FinalProject/ALL SCANS")
 
 

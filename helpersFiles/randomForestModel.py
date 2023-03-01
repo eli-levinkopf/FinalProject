@@ -11,7 +11,8 @@ import re
 from modelHelper import*
 
 
-# [0, 2, 1, 3]
+# test: [0, 2, 1, 3]
+# train: [2, 2, 3, 2, 1, 2, 0, 1, 1, 2, 1, 3]
 
 
 
@@ -31,13 +32,35 @@ def classify2D(pathToFolder, axis):
     RF.fit(trainX, trainY)
     testY = RF.predict(testX)
 
+
     testPredictions = []
 
     for i in range(len(testY)//NUM_OF_SLICES):
         testPredictions.append(np.bincount(testY[i*NUM_OF_SLICES:i*NUM_OF_SLICES+NUM_OF_SLICES]).argmax())
     
+    # labelBinarizer = LabelBinarizer().fit(np.array([0,1, 2, 3]))
+    # testYOneHot = labelBinarizer.transform(np.array(testPredictions)) 
+    # classId = np.flatnonzero(labelBinarizer.classes_ == 0)[0]
+
+    # RocCurveDisplay.from_predictions(
+    # testYOneHot[:, classId],
+    # np.array(testPredictions)[:, classId],
+    # name="0 vs the rest",
+    # color="darkorange",
+    # )
+    # plt.plot([0, 1], [0, 1], "k--", label="chance level (AUC = 0.5)")
+    # plt.axis("square")
+    # plt.xlabel("False Positive Rate")
+    # plt.ylabel("True Positive Rate")
+    # plt.title("One-vs-Rest ROC curves:\0 vs the rest")
+    # plt.legend()
+    # plt.show()
+
     print(f'axis {axis}: ', testPredictions)
     print([classes[x] for x in testPredictions])
+
+    # plotRocCurve(RF.predict_proba(testX), f'random Forest 2D{axis}')
+    print(f1_score(y_true=np.array([0, 2, 1, 3]), y_pred=testPredictions, average='micro'))
 
 
 
@@ -58,10 +81,12 @@ def classify3D(pathToFolder):
     
     print(testY)
     print([classes[x] for x in testY])
+    plotRocCurve(testY, 'random Forest 3D')
+    print(f1_score(y_true=np.array([0, 2, 1, 3]), y_pred=testY, average='micro'))
 
 
-classify2D('/Users/elilevinkopf/Documents/Ex23A/FinalProject/validForRF', axis='A')
-classify2D('/Users/elilevinkopf/Documents/Ex23A/FinalProject/validForRF', axis='C')
+# classify2D('/Users/elilevinkopf/Documents/Ex23A/FinalProject/validForRF', axis='A')
+# classify2D('/Users/elilevinkopf/Documents/Ex23A/FinalProject/validForRF', axis='C')
 
-# classify3D('/Users/elilevinkopf/Documents/Ex23A/FinalProject/validForRF')
+classify3D('/Users/elilevinkopf/Documents/Ex23A/FinalProject/validForRF')
     

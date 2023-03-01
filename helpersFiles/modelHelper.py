@@ -4,12 +4,14 @@ import nibabel as nib
 import numpy as np
 import scipy.ndimage as ndi
 import os
-from sklearn.ensemble import RandomForestClassifier
 from classifySinus import getCorrelate, getCorrelate2D
 from skimage.measure import label, regionprops, regionprops_table
+from sklearn.preprocessing import LabelBinarizer
 import pandas as pd
 import re
 from pandas_profiling import ProfileReport
+from sklearn.metrics import roc_curve, auc, RocCurveDisplay, f1_score
+import matplotlib.pyplot as plt
 
 NUM_OF_SLICES = 25
 
@@ -78,19 +80,19 @@ def getFeatures2D(pathToFolder, axis):
             subSampels = create2DSampelsC(sinusSeg)
 
         for sample in subSampels:
-            label_img = label(sample)
-            props = regionprops_table(label_img, properties=properties)
-            props = pd.DataFrame(props)
+            # label_img = label(sample)
+            # props = regionprops_table(label_img, properties=properties)
+            # props = pd.DataFrame(props)
             
-            if props.empty:
-                props = np.zeros(len(properties)+1)
-            else:
-                props = props.to_numpy()[0]
+            # if props.empty:
+            #     props = np.zeros(len(properties)+1)
+            # else:
+            #     props = props.to_numpy()[0]
 
-            features = np.append(props, getCorrelate2D(sample)[0])
-            featuresMat.append(features)
+            # features = np.append(props, getCorrelate2D(sample)[0])
+            # featuresMat.append(features)
             
-            # featuresMat.append(sample.flatten())
+            featuresMat.append(sample.flatten())
 
     return np.array(featuresMat)
 
@@ -116,6 +118,32 @@ def getFeatures3D(pathToFolder):
         featuresMat.append(features)
 
     return np.array(featuresMat)
+
+
+def plotRocCurve(yTest, modelName):
+    yTrue = np.array([0, 2, 1, 3])
+    yTestOneClass = np.zeros(yTest.size)
+    yTestOneClass[yTest == 0] = 1
+    yTrueOneClass = np.zeros(yTrue.size)
+    yTrueOneClass[yTrue == 0] = 1
+
+    # Compute ROC curve and ROC area
+    fpr, tpr, _ = roc_curve(yTrueOneClass, yTestOneClass, pos_label=0)
+    roc_auc = auc(fpr, tpr)
+
+    # Plot of a ROC curve for a specific class
+    plt.figure()
+    plt.plot(fpr, tpr, label='ROC curve (area = %0.2f)' % roc_auc)
+    print(fpr, tpr)
+    plt.plot([0, 1], [0, 1], 'k--')
+    plt.xlim([0.0, 1.0])
+    plt.ylim([0.0, 1.05])
+    plt.xlabel('False Positive Rate')
+    plt.ylabel('True Positive Rate')
+    plt.title(f'ROC curve {modelName}')
+    plt.legend(loc="lower right")
+    plt.show()
+
 
 # sinusSeg = nib.load('/Users/elilevinkopf/Documents/Ex23A/FinalProject/downSampledScans/case#3.nii.gz').get_fdata()
 # create2DSampels(sinusSeg)

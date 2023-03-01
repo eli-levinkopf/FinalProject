@@ -2,6 +2,12 @@ from scipy.signal import correlate
 import nibabel as nib
 import numpy as np
 import os
+from sklearn.metrics import roc_curve, auc
+import matplotlib.pyplot as plt
+from sklearn.preprocessing import label_binarize
+
+
+
 
 SYMMETRY_TH = 0.55
 TWO_HEALTHY_TH = 25000
@@ -75,12 +81,39 @@ def splitSegmantation():
             nib.save(nib.Nifti1Image(rightSeg, None), f'/Users/elilevinkopf/Documents/Ex23A/FinalProject/oneSideSegmantations/case#{i}_right.nii.gz')
             nib.save(nib.Nifti1Image(leftSeg, None), f'/Users/elilevinkopf/Documents/Ex23A/FinalProject/oneSideSegmantations/case#{i}_left.nii.gz')
 
+# from sklearn.metrics import roc_curve, auc, RocCurveDisplay, f1_score
+# print(f1_score(y_true=np.array([0, 2, 1, 3]), y_pred=np.array([0, 3, 1, 3]), average='micro'))
 
-# for i in [1, 4, 5, 6, 12, 13, 15, 16, 17, 19, 22, 24, 25, 27, 32, 33]:
+
+# for i in [16, 24, 25, 33]:
 #     path = f'/Users/elilevinkopf/Documents/Ex23A/FinalProject/sinusSeg/case#{i}.nii'
 #     if os.path.isfile(path):
 #         print(f'case#{i}')
 #         sinusClassification(path)
+# yTrue = np.array([0, 2, 1, 3])
+# yTest = np.array([0, 3, 1, 3])
+# yTestOneClass = np.zeros(yTest.size)
+# yTestOneClass[yTest == 0] = 1
+# yTrueOneClass = np.zeros(yTrue.size)
+# yTrueOneClass[yTrue == 0] = 1
+
+# # Compute ROC curve and ROC area
+# fpr, tpr, _ = roc_curve(yTrueOneClass, yTestOneClass)
+# roc_auc = auc(fpr, tpr)
+
+# # Plot of a ROC curve for a specific class
+# plt.figure()
+# plt.plot(fpr, tpr, label='ROC curve (area = %0.2f)' % roc_auc)
+# print(fpr, tpr)
+# plt.plot([0, 1], [0, 1], 'k--')
+# plt.xlim([0.0, 1.0])
+# plt.ylim([0.0, 1.05])
+# plt.xlabel('False Positive Rate')
+# plt.ylabel('True Positive Rate')
+# plt.title(f'ROC curve classify by TH')
+# plt.legend(loc="lower right")
+# plt.show()
+
 
 # splitSegmantation()
 
