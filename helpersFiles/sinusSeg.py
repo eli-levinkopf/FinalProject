@@ -33,7 +33,7 @@ def postProcessing(imgToProcess):
     """
     processedImg = area_closing(imgToProcess, area_threshold=64, connectivity=2)
     processedImg = area_opening(imgToProcess, area_threshold=64, connectivity=2)
-    processedImg = binary_erosion(imgToProcess)
+    # processedImg = binary_erosion(imgToProcess)
     return processedImg
 
 
@@ -48,19 +48,28 @@ def sinusSegmentation(pathToNifti):
     # extract case index from file path
     caseIdx = pathToNifti.split('/')[-1].split('.')[0]
     # resize the scan to a uniform format
-    niftiFile = resizeScan(pathToNifti)
-    ctData= niftiFile.get_fdata()
+    # niftiFile = resizeScan(pathToNifti)
+    niftiFile = nib.load(pathToNifti)
+    ctData = niftiFile.get_fdata()
     # thresholds = threshold_local(ctData, block_size=301)
     # perform segmentation to identify sinuses
     sinusSegmentation = ctData < -900
-    sinusSegmentation[:, int(3*ctData.shape[1]/4): , :] = 0
+    # sinusSegmentation[:, int(3*ctData.shape[1]/4): , :] = 0
     # identify largest connected component of segmented image
     largestConnectedComponent = label(sinusSegmentation, connectivity=2)
     bins = np.bincount(largestConnectedComponent.flat, weights=sinusSegmentation.flat)
-    bins[bins.argmax()] = -np.inf
+    # bins[bins.argmax()] = -np.inf
     largestCC = (largestConnectedComponent == bins.argmax()).astype(float)
+
+    # largestCC[: int(0.25*largestCC.shape[0]), :, :] = 0
+    # largestCC[int(0.8*largestCC.shape[0]):, :, :] = 0
+    # largestCC[:, :int(0.35*largestCC.shape[1]), :] = 0
+    # largestCC[:, :, int(0.9*largestCC.shape[2]):] = 0
+    # largestCC[:, int(0.75*largestCC.shape[1]):, :] = 0
+    
+    # largestCC = postProcessing(largestCC)
     # save largest connected component as new NIfTI image file
-    nib.save(nib.Nifti1Image(largestCC, None), f'/Users/elilevinkopf/Documents/Ex23A/FinalProject/sinusSeg/{caseIdx}') 
+    nib.save(nib.Nifti1Image(largestCC, None), f'/Users/elilevinkopf/Documents/Ex23A/FinalProject/newSinusSegmantation/{caseIdx}.nii.gz') 
 
 
 def resizeScan(pathToNifti):
@@ -85,7 +94,7 @@ def resizeScan(pathToNifti):
 
 
 
-for i in range(33, 34):
+for i in range(35, 36):
     path = f'/Users/elilevinkopf/Documents/Ex23A/FinalProject/ctScanNiftiFiles/case#{i}.nii.gz'
     if os.path.isfile(path):
         sinusSegmentation(path)
