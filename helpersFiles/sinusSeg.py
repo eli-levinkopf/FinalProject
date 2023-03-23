@@ -124,11 +124,13 @@ def resizeScan(pathToNifti):
 #     nib.save(nib.Nifti1Image(newSeg, None), f'/Users/elilevinkopf/Documents/Ex23A/FinalProject/Perfect segmentations/case#35.nii.gz')
 
 
-def reshape3DMatrix(scan: np.ndarray, targetShape: tuple) -> np.ndarray:
+def reshape3DScan(scan: np.ndarray, targetShape: tuple) -> np.ndarray:
     """
     Reshapes a 3D numpy array to a target shape by adding or removing slices along each axis.
 
-    If an axis of `scan` is larger than the corresponding value in `targetShape`, slices are removed uniformly along that axis. If an axis of `scan` is smaller than the corresponding value in `targetShape`, zeros are added to both sides of that axis. After reshaping, the data along the y-axis is flipped like a mirror.
+    If an axis of `scan` is larger than the corresponding value in `targetShape`, slices are removed uniformly along that axis.
+    If an axis of `scan` is smaller than the corresponding value in `targetShape`, zeros are added to both sides of that axis.
+    After reshaping, the data along the y-axis is flipped like a mirror.
 
     Parameters
     ----------
@@ -171,9 +173,11 @@ def reshape3DMatrix(scan: np.ndarray, targetShape: tuple) -> np.ndarray:
 
 def preProcessing(folderPath: str, targetShape: tuple):
     """
-    Applies the `reshape3DMatrix` function to all .nii.gz files in a specified folder.
+    Applies the `reshape3DScan` function to all .nii.gz files in a specified folder.
 
-    This function loads each .nii.gz file in the specified folder as a 3D numpy array using the nibabel library. It then applies the `reshape3DMatrix` function to this array with the specified `targetShape`. The resulting reshaped array is saved back to disk, overwriting the original .nii.gz file.
+    This function loads each .nii.gz file in the specified folder as a 3D numpy array using the nibabel library.
+    It then applies the `reshape3DScan` function to this array with the specified `targetShape`. 
+    The resulting reshaped array is saved back to disk, overwriting the original .nii.gz file.
 
     Parameters
     ----------
@@ -196,7 +200,7 @@ def preProcessing(folderPath: str, targetShape: tuple):
             scan = nib.load(filePath).get_fdata()
             
             # Apply reshape3DMatrix function to scan with specified targetShape
-            reshapedScan = reshape3DMatrix(scan, targetShape)
+            reshapedScan = reshape3DScan(scan, targetShape)
             
             # Save reshaped scan back to disk, overwriting original .nii.gz file 
             nib.save(nib.Nifti1Image(reshapedScan, None), filePath)
