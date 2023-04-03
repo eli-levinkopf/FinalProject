@@ -61,15 +61,17 @@ def sinusSegmentation(pathToNifti):
     # bins[bins.argmax()] = -np.inf
     largestCC = (largestConnectedComponent == bins.argmax()).astype(float)
 
-    largestCC[: int(0.25*largestCC.shape[0]), :, :] = 0
-    largestCC[int(0.75*largestCC.shape[0]):, :, :] = 0
-    largestCC[:, :int(0.4*largestCC.shape[1]), :] = 0
-    largestCC[:, :, int(0.7*largestCC.shape[2]):] = 0
-    largestCC[:, int(0.7*largestCC.shape[1]):, :] = 0
+    largestCC[: int(0.20*largestCC.shape[0]), :, :] = 0
+    largestCC[int(0.4*largestCC.shape[0]):, :, :] = 0
+    largestCC[:, :int(0.25*largestCC.shape[1]), :] = 0
+    # largestCC[:, :, int(0.25*largestCC.shape[2]):] = 0
+    largestCC[:, int(0.6*largestCC.shape[1]):, :] = 0
     
     # largestCC = postProcessing(largestCC)
     # save largest connected component as new NIfTI image file
     nib.save(nib.Nifti1Image(largestCC, None), f'/Users/elilevinkopf/Documents/Ex23A/FinalProject/{caseIdx}.nii.gz') 
+
+sinusSegmentation('/Users/elilevinkopf/Documents/Ex23A/FinalProject/ctScanNiftiFiles/case#47.nii.gz')
 
 
 def resizeScan(pathToNifti):
@@ -91,37 +93,6 @@ def resizeScan(pathToNifti):
     # nib.save(nib.Nifti1Image(ctScan, None), f'/Users/elilevinkopf/Documents/Ex23A/FinalProject/downSampledScans/case#{i}.nii.gz')
     return nib.Nifti1Image(ctScan, None)
 
-
-# def reSize(input):
-#     # (S, C, A)
-#     # (468, 468, 407)
-#     # case13, 18, 24, 32, 35 (600, 600, 312)
-#     random.seed(1)
-#     slicesToRemoveS = random.sample(range(600), 132)
-#     slicesToRemoveC = random.sample(range(600), 132)
-#     newScan = np.zeros((468, 468, 312))
-#     newScan = np.delete(input, slicesToRemoveS, axis=0)
-#     newScan = np.delete(newScan, slicesToRemoveC, axis=1)
-    
-#     matrixToAdd = np.zeros((468, 468, 47))
-#     matrixToAdd = np.dstack((matrixToAdd, newScan))
-#     matrixToAdd = np.dstack((matrixToAdd, np.zeros((468, 468, 48))))
-
-#     # matrixToAddD = np.zeros((468, 468, 31))
-#     # matrixToAddD = np.dstack((matrixToAddD, matrixToAdd))
-#     # matrixToAddD = np.dstack((matrixToAddD, np.zeros((468, 468, 32))))
-#     # return matrixToAddD
-#     return matrixToAdd
-
-# def preProcessing():
-#     scan = nib.load('/Users/elilevinkopf/Documents/Ex23A/FinalProject/ctScanNiftiFiles/case#35.nii.gz').get_fdata()
-#     seg = nib.load('/Users/elilevinkopf/Documents/Ex23A/FinalProject/Perfect segmentations/case#35.nii.gz').get_fdata()
-
-#     newScan = reSize(scan)
-#     newSeg = reSize(seg)
-    
-#     nib.save(nib.Nifti1Image(newScan, None), f'/Users/elilevinkopf/Documents/Ex23A/FinalProject/ctScanNiftiFiles/case#35.nii.gz')
-#     nib.save(nib.Nifti1Image(newSeg, None), f'/Users/elilevinkopf/Documents/Ex23A/FinalProject/Perfect segmentations/case#35.nii.gz')
 
 
 def reshape3DScan(scan: np.ndarray, targetShape: tuple) -> np.ndarray:
@@ -206,11 +177,18 @@ def preProcessing(folderPath: str, targetShape: tuple):
             nib.save(nib.Nifti1Image(reshapedScan, None), filePath)
 
 
-# for i in range(44, 51):
-#     path = f'/Users/elilevinkopf/Documents/Ex23A/FinalProject/ctScanNiftiFiles/case#{i}.nii.gz'
-#     if os.path.isfile(path):
-        # sinusSegmentation(path)
-        # print(f'case{i}', nib.load(path).get_fdata().shape)
+def defaultSegmentation(folderPath):
+    # Loop over all files in specified folder
+    for filename in os.listdir(folderPath):
+        # Check if file is a .nii.gz file
+        if filename.endswith('.nii.gz') and filename in ['case#7.nii.gz', 'case#8.nii.gz']:
+            # Load .nii.gz file as 3D numpy array using nibabel library
+            filePath = os.path.join(folderPath, filename)
+            scan = nib.load(filePath).get_fdata()
+            scan[0, 0, 0] = 1
+            nib.save(nib.Nifti1Image(scan, None), filePath)
 
 
-preProcessing(folderPath='/Users/elilevinkopf/Documents/Ex23A/FinalProject/untitled folder', targetShape=(468, 468, 407))
+# preProcessing(folderPath='/Users/elilevinkopf/Documents/Ex23A/FinalProject/ctScanNiftiFiles', targetShape=(468, 468, 407))
+# defaultSegmentation('/Users/elilevinkopf/Documents/Ex23A/FinalProject/Perfect segmentations/penetration segmentations')
+
