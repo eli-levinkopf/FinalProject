@@ -14,18 +14,21 @@ from modelHelper import*
 # test: [0, 2, 1, 3]
 # train: [2, 2, 3, 2, 1, 2, 0, 1, 1, 2, 1, 3]
 
+# test1 = [1, 2, 2, 3, 0, 1, 3, 1, 1]
+
 
 
 
 def classify2D(pathToFolder, axis):
-    trainY = np.repeat([2, 2, 3, 2, 1, 2, 0, 1, 1, 2, 1, 3], NUM_OF_SLICES)
+    # trainY = np.repeat([2, 2, 3, 2, 1, 2, 0, 1, 1, 2, 1, 3], NUM_OF_SLICES)
+    trainY = np.repeat([2, 3, 2, 3, 2, 3, 3, 3, 0, 3, 1, 2, 3, 3, 1, 1, 1, 2, 2, 1, 2, 3, 2, 2, 3], NUM_OF_SLICES)
 
     # create train set
-    pathToTrain = pathToFolder+'/train'
+    pathToTrain = pathToFolder+'/train1'
     trainX = getFeatures2D(pathToTrain, axis)
 
     # create test set
-    pathToTest= pathToFolder+'/test'
+    pathToTest= pathToFolder+'/test1'
     testX = getFeatures2D(pathToTest, axis)
 
     RF = RandomForestClassifier()
@@ -63,17 +66,19 @@ def classify2D(pathToFolder, axis):
     print(f1_score(y_true=np.array([0, 2, 1, 3]), y_pred=testPredictions, average='micro'))
 
 
-
+# {0: 'both healthy', 1: 'both sick', 2: 'left sick right healthy', 3: 'left healthy right sick'}
+# [1, 2, 2, 3, 0, 1, 3, 1, 1]
 def classify3D(pathToFolder):
-    trainY = np.repeat([2, 2, 3, 2, 1, 2, 0, 1, 1, 2, 1, 3], 1)
+    # trainY = np.repeat([2, 2, 3, 2, 1, 2, 0, 1, 1, 2, 1, 3], 1)
+    trainY = [2, 3, 2, 3, 2, 3, 3, 3, 0, 3, 1, 2, 3, 3, 1, 1, 1, 2, 2, 1, 2, 3, 2, 2, 3]
 
     # create train set
-    pathToTrain = pathToFolder+'/train'
-    trainX = getFeatures3D(pathToTrain)
+    pathToTrain = pathToFolder+'/train1'
+    trainX = getCountFeatures3D(pathToTrain)
 
     # create test set
-    pathToTest= pathToFolder+'/test'
-    testX = getFeatures3D(pathToTest)
+    pathToTest= pathToFolder+'/test1'
+    testX = getCountFeatures3D(pathToTest)
 
     RF = RandomForestClassifier()
     RF.fit(trainX, trainY)
@@ -81,8 +86,8 @@ def classify3D(pathToFolder):
     
     print(testY)
     print([classes[x] for x in testY])
-    plotRocCurve(testY, 'random Forest 3D')
-    print(f1_score(y_true=np.array([0, 2, 1, 3]), y_pred=testY, average='micro'))
+    # plotRocCurve(testY, 'random Forest 3D')
+    # print(f1_score(y_true=np.array([0, 2, 1, 3]), y_pred=testY, average='micro'))
 
 
 # classify2D('/Users/elilevinkopf/Documents/Ex23A/FinalProject/validForRF', axis='A')

@@ -20,18 +20,23 @@ def sinusClassification(sinusSegPath):
     if corr > SYMMETRY_TH: # in this case we assume this is a symmetric segmentation
         if np.count_nonzero(sinusSeg) > TWO_HEALTHY_TH: # both sinuses are healthy
             print("0: right sinus: healthy, left sinus: healthy")
+            return 0
         else: # both sinuses are sick
             print("1: right sinus: sick, left sinus: sick")
+            return 1
 
     else: # in this case we assume asymmetric segmentation
         if np.count_nonzero(sinusSeg) <= SINGLE_HEALTHY_SINUS_TH: 
             print("1: right sinus: sick, left sinus: sick")
+            return 1
 
         else: # in this case we assume that only one of the sinuses is healthy.
             if np.count_nonzero(leftSeg) <= np.count_nonzero(rightSeg):
                 print("2: right sinus: healthy, left sinus: sick")
+                return 2
             else:
                 print("3: right sinus: sick, left sinus: healthy")
+                return 3
 
 
 def getCorrelate(sinusSeg):
@@ -40,12 +45,25 @@ def getCorrelate(sinusSeg):
     if rightSeg.shape[0] != leftSeg.shape[0]:
         leftSeg = leftSeg[:-1, :, :]
 
+
     leftSeg = np.flip(leftSeg, axis=0)
     norm_a = np.linalg.norm(leftSeg)
+    leftIsEmpty, rightIsEmpty = None, None
+    if np.count_nonzero(leftSeg) == 0:
+        norm_a = 1
+        leftIsEmpty = True
     leftSegNorm = leftSeg / norm_a
     norm_b = np.linalg.norm(rightSeg)
+    if np.count_nonzero(rightSeg) == 0:
+        norm_b = 1
+        rightIsEmpty  =True
     rightSegNorm = rightSeg / norm_b
+    if leftIsEmpty and rightIsEmpty:
+        return 1, rightSeg, leftSeg
+    if leftIsEmpty or rightIsEmpty:
+        return 0, rightSeg, leftSeg
     corr = np.correlate(leftSegNorm.flatten(), rightSegNorm.flatten())[0]
+    # corr = np.corrcoef(leftSegNorm.flatten(), rightSegNorm.flatten())[0, 1]
 
     return corr, rightSeg,leftSeg
 
@@ -84,14 +102,27 @@ def splitSegmantation():
 # from sklearn.metrics import roc_curve, auc, RocCurveDisplay, f1_score
 # print(f1_score(y_true=np.array([0, 2, 1, 3]), y_pred=np.array([0, 3, 1, 3]), average='micro'))
 
+# import re
+# def atoi(text):
+#     return int(text) if text.isdigit() else text
 
-# for i in [16, 24, 25, 33]:
-#     path = f'/Users/elilevinkopf/Documents/Ex23A/FinalProject/sinusSeg/case#{i}.nii'
-#     if os.path.isfile(path):
-#         print(f'case#{i}')
-#         sinusClassification(path)
-# yTrue = np.array([0, 2, 1, 3])
-# yTest = np.array([0, 3, 1, 3])
+# def natural_keys(text):
+#     return [ atoi(c) for c in re.split(r'(\d+)', text) ]
+
+# res = []
+# # Loop over all files in specified folder
+# folder = '/Users/elilevinkopf/Documents/Ex23A/FinalProject/Perfect segmentations/sinus segmentations'
+# for filename in sorted(os.listdir(folder), key=natural_keys):
+#     # Check if file is a .nii.gz file
+#     if filename.endswith('.nii.gz'):
+#         print(filename.split('/')[-1].split('.')[0])
+#         res.append(sinusClassification(folder +'/' + filename))
+
+# res = np.array(res)
+# # classes = {0: 'both healthy', 1: 'both sick', 2: 'left sick right healthy', 3: 'left healthy right sick'}
+# yTrue = np.array([2, 3, 2, 3, 2, 0, 0, 3, 0, 3, 1, 2, 0, 3, 1, 1, 1, 2, 2, 1, 1, 2, 2, 3, 0, 1, 3, 2, 3, 2, 2, 1, 3, 1])
+# print(res == yTrue)
+
 # yTestOneClass = np.zeros(yTest.size)
 # yTestOneClass[yTest == 0] = 1
 # yTrueOneClass = np.zeros(yTrue.size)
