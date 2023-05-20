@@ -175,20 +175,3 @@ def preProcessing(folderPath: str, targetShape: tuple):
             
             # Save reshaped scan back to disk, overwriting original .nii.gz file 
             nib.save(nib.Nifti1Image(reshapedScan, None), filePath)
-
-
-def defaultSegmentation(folderPath):
-    # Loop over all files in specified folder
-    for filename in os.listdir(folderPath):
-        # Check if file is a .nii.gz file
-        if filename.endswith('.nii.gz'):
-            # Load .nii.gz file as 3D numpy array using nibabel library
-            filePath = os.path.join(folderPath, filename)
-            scan = nib.load(filePath).get_fdata()
-            scan[0, 0, 0] = 0
-            nib.save(nib.Nifti1Image(scan, None), filePath)
-
-
-# preProcessing(folderPath='/Users/elilevinkopf/Documents/Ex23A/FinalProject/ctScanNiftiFiles', targetShape=(468, 468, 407))
-defaultSegmentation('/Users/elilevinkopf/Documents/Ex23A/FinalProject/Perfect segmentations/penetration segmentations')
-

@@ -105,18 +105,30 @@ def getFeatures3D(pathToFolder):
         sinusSeg = nib.load(pathToFolder+ '/' + filename).get_fdata()
         label_img = label(sinusSeg)
         props = regionprops_table(label_img, properties=('centroid',
-                                                'axis_major_length',
-                                                'axis_minor_length',
+                                                # 'axis_major_length',
+                                                # 'axis_minor_length',
                                                 'area',
                                                 'equivalent_diameter_area',
                                                 ))
-        
         props = pd.DataFrame(props)
-        props = props.to_numpy()[0]
-        props = np.delete(props, np.s_[1:3])
+        if props.to_numpy().size == 0:
+            props = np.zeros((3))
+        else:
+            props = props.to_numpy()[0]
+            props = np.delete(props, np.s_[1:3])
         features = np.append(props, getCorrelate(sinusSeg)[0])
-        featuresMat.append(features)
+        featuresMat.append(np.nan_to_num(features))
 
+    return np.array(featuresMat)
+
+def getCountFeatures3D(pathToFolder):
+    featuresMat = []
+    for filename in sorted(os.listdir(pathToFolder), key=natural_keys):
+        if filename == '.DS_Store':
+            continue
+        sinusSeg = nib.load(pathToFolder+ '/' + filename).get_fdata()
+        corr, rightSeg, leftSeg = getCorrelate(sinusSeg)
+        featuresMat.append([corr, np.count_nonzero(rightSeg), np.count_nonzero(leftSeg)])
     return np.array(featuresMat)
 
 

@@ -3,7 +3,6 @@ import numpy as np
 import scipy.ndimage as ndi
 import os
 from skimage.morphology import area_closing
-from scipy import ndimage
 import cv2
 import matplotlib.pyplot as plt
 
@@ -84,7 +83,8 @@ def count_intersections(path_to_folder):
 
 
 
-img = nib.load('/Users/elilevinkopf/Documents/Ex23A/FinalProject/test_output/task 509_sinus_bone/sinus_bone_044.nii.gz').get_fdata()
+# img = nib.load('/Users/elilevinkopf/Downloads/res.nii.gz').get_fdata()
+
 # m = img.get_fdata()
 # m_closed = area_closing(m, area_threshold=1024, connectivity=2)
 # nib.save(nib.Nifti1Image(m_closed, None), '/Users/elilevinkopf/Documents/Ex23A/FinalProject/test_output/task 509_sinus_bone/tmp044.nii.gz')
@@ -96,7 +96,7 @@ img = nib.load('/Users/elilevinkopf/Documents/Ex23A/FinalProject/test_output/tas
 
 
 
-def process_segmentation(segmentation_3D):
+def process_segmentation(segmentation_3D_path):
     """
     This function processes a 3D segmentation matrix by projecting it to a 2D matrix, filling the holes in the 2D matrix,
     and returning a matrix with the holes marked with ones.
@@ -104,10 +104,12 @@ def process_segmentation(segmentation_3D):
     :param segmentation_path: Path to the 3D segmentation matrix
     :return: Tuple containing the filled regions and the rounded centers of mass
     """
+    segmentation_3D = nib.load(segmentation_3D_path).get_fdata()
+    segmentation_3D[:, :, :segmentation_3D.shape[1]//5] = 0
     # Project the 3D matrix to a 2D matrix
     segmentation_2D = np.sum(segmentation_3D, axis=2) != 0
     # Fill the holes in the 2D matrix
-    filled_matrix = ndimage.binary_fill_holes(segmentation_2D).astype(int)
+    filled_matrix = ndi.binary_fill_holes(segmentation_2D).astype(int)
 
     # Subtract to get a matrix with the holes marked with ones
     inverse_2D_segmentation = filled_matrix - segmentation_2D
@@ -117,10 +119,10 @@ def process_segmentation(segmentation_3D):
     # plt.imshow(filled_matrix, cmap='gray')
     # plt.show()
 
-    # plt.imshow(filled_regions, cmap='gray')
+    # plt.imshow(inverse_2D_segmentation, cmap='gray')
     # plt.show()
 
-    return inverse_2D_segmentation
+    return inverse_2D_segmentation, segmentation_3D
 
 
 def find_dental_anomalies_edges(inverse_2D_segmentation):
@@ -181,27 +183,27 @@ def find_dental_anomalies_edges1(inverse_2D_segmentation):
 
 
 
-def detect_dental_anomalies(points, original_segmentation):
+def detect_dental_anomalies(edges, original_segmentation):
     result_matrix = np.zeros((original_segmentation.shape[0], original_segmentation.shape[1]))
     for x, y in edges:
         result_matrix[x, y] = 1
-    labels_2D_matrix, num_labels = ndimage.label(result_matrix)
+    labels_2D_matrix, num_labels = ndi.label(result_matrix)
     result_3D_matrix = np.zeros_like(original_segmentation)
 
     for i in range(1, num_labels + 1):
         z_coordinate = 0
         num_of_z = 0
-        for x, y in points:
+        for x, y in edges:
             for z in range(original_segmentation.shape[2]):
                 if labels_2D_matrix[x, y] == i and original_segmentation[x, y, z] == 1:
                     z_coordinate += z
                     num_of_z += 1
         z_coordinate /= num_of_z
-        for x,y in points:
+        for x,y in edges:
             if labels_2D_matrix[x, y] == i:
                 result_3D_matrix[x, y, int(z_coordinate)] = 1
 
-    labels, num_labels = ndimage.label(result_3D_matrix)
+    labels, num_labels = ndi.label(result_3D_matrix)
     label_sizes = np.bincount(labels.ravel())
 
     centers_of_mass = []
@@ -209,7 +211,7 @@ def detect_dental_anomalies(points, original_segmentation):
     for i in range(1, num_labels + 1):
         if label_sizes[i] < 100: # drop elements that are smaller than 100
             continue
-        center_of_mass = ndimage.center_of_mass(labels == i)
+        center_of_mass = ndi.center_of_mass(labels == i)
         centers_of_mass.append(center_of_mass)
 
     # TODO: delete this line
@@ -237,7 +239,7 @@ def detect_dental_anomalies1(points, original_segmentation):
     result_matrix[points[:, 0], points[:, 1]] = 1
     
     # Label the connected components in the 2D result matrix
-    labels_2D_matrix, num_labels = ndimage.label(result_matrix)
+    labels_2D_matrix, num_labels = ndi.label(result_matrix)
     
     # Create a 3D result matrix
     result_3D_matrix = np.zeros_like(original_segmentation)
@@ -256,7 +258,7 @@ def detect_dental_anomalies1(points, original_segmentation):
         result_3D_matrix[mask, int(z_coordinates[i - 1])] = 1
     
     # Label the connected components in the 3D result matrix
-    labels, num_labels = ndimage.label(result_3D_matrix)
+    labels, num_labels = ndi.label(result_3D_matrix)
     # Get the size of every connected components in the 3D result matrix
     label_sizes = np.bincount(labels.ravel())
 
@@ -265,7 +267,7 @@ def detect_dental_anomalies1(points, original_segmentation):
     for i in range(1, num_labels + 1):
         if label_sizes[i] < 100: # drop elements that are smaller than 100
             continue
-        center_of_mass = ndimage.center_of_mass(labels == i)
+        center_of_mass = ndi.center_of_mass(labels == i)
         centers_of_mass.append(center_of_mass)
     
     # TODO: delete this line
@@ -275,10 +277,9 @@ def detect_dental_anomalies1(points, original_segmentation):
 
 
 
-edges = find_dental_anomalies_edges1(process_segmentation(img))
-print(detect_dental_anomalies1(edges, img))
-
-
+inverse_2D_segmentation, segmentation_3D = process_segmentation('/Users/elilevinkopf/Documents/Ex23A/FinalProject/test_output/task 509_sinus_bone/sinus_bone_044.nii.gz')
+edges = find_dental_anomalies_edges1(inverse_2D_segmentation)
+print(detect_dental_anomalies1(edges, segmentation_3D))
 
 
 # def find_appropriate_points(points, matrix):

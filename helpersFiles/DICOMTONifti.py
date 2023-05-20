@@ -9,7 +9,7 @@ import nibabel as nib
 import numpy as np
 
 def convertDicom2Nifti(pathToFolder):
-    for i in range(11, 12):
+    for i in range(9, 10):
         dirSize = 0
         if len(os.listdir(pathToFolder + f"/case #{i}")) == 0:
             continue
@@ -18,7 +18,7 @@ def convertDicom2Nifti(pathToFolder):
             folder_to_convert = pathToFolder + f"/case #{i}/DICOM/00000001/"+folder
             if os.path.isdir(folder_to_convert) and len(os.listdir(folder_to_convert)) > dirSize:
                 dirSize = len(os.listdir(folder_to_convert))
-                dicom2nifti.convert_directory(folder_to_convert, f"/Users/elilevinkopf/Documents/Ex23A/FinalProject/ctScanNiftiFiles/case#{i}")
+                dicom2nifti.convert_directory(folder_to_convert, f"/Users/elilevinkopf/Documents/Ex23A/FinalProject/case#{i}")
 
 
 
