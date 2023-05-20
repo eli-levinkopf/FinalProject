@@ -105,7 +105,10 @@ def process_segmentation(segmentation_3D_path):
     :return: Tuple containing the filled regions and the rounded centers of mass
     """
     segmentation_3D = nib.load(segmentation_3D_path).get_fdata()
-    segmentation_3D[:, :, :segmentation_3D.shape[1]//5] = 0
+    indices_of_z_segmentation = np.argwhere(segmentation_3D == 1)
+    if (np.max(indices_of_z_segmentation[:,2]) > 140): # TODO: Think about this threshold
+        # Fill the lower part of the segmentation with zeros
+        segmentation_3D[:, :, :segmentation_3D.shape[1]//5] = 0
     # Project the 3D matrix to a 2D matrix
     segmentation_2D = np.sum(segmentation_3D, axis=2) != 0
     # Fill the holes in the 2D matrix
@@ -113,7 +116,6 @@ def process_segmentation(segmentation_3D_path):
 
     # Subtract to get a matrix with the holes marked with ones
     inverse_2D_segmentation = filled_matrix - segmentation_2D
-
 
     # TODO: delete these lines
     # plt.imshow(filled_matrix, cmap='gray')
@@ -276,10 +278,14 @@ def detect_dental_anomalies1(points, original_segmentation):
     return np.rint(centers_of_mass).astype(int)
 
 
-
-inverse_2D_segmentation, segmentation_3D = process_segmentation('/Users/elilevinkopf/Documents/Ex23A/FinalProject/test_output/task 509_sinus_bone/sinus_bone_044.nii.gz')
-edges = find_dental_anomalies_edges1(inverse_2D_segmentation)
-print(detect_dental_anomalies1(edges, segmentation_3D))
+for i in [3, 5, 6, 10, 17, 18, 19, 25, 44]:
+    if i < 10:
+        inverse_2D_segmentation, segmentation_3D = process_segmentation(f'/Users/elilevinkopf/Documents/Ex23A/FinalProject/test_output/task 509_sinus_bone/sinus_bone_00{i}.nii.gz')
+    else:
+        inverse_2D_segmentation, segmentation_3D = process_segmentation(f'/Users/elilevinkopf/Documents/Ex23A/FinalProject/test_output/task 509_sinus_bone/sinus_bone_0{i}.nii.gz')
+    edges = find_dental_anomalies_edges1(inverse_2D_segmentation)
+    anomalies = detect_dental_anomalies1(edges, segmentation_3D)
+    print(f'case{i}: {anomalies}')
 
 
 # def find_appropriate_points(points, matrix):
