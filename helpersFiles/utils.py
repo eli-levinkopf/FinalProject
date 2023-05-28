@@ -4,7 +4,7 @@ import scipy.ndimage as ndi
 import os
 from skimage.morphology import area_closing
 import cv2
-import matplotlib.pyplot as plt
+import matplotlib.pyplot as plt 
 
 
 def defaultSegmentation(folderPath):
@@ -278,6 +278,7 @@ def detect_dental_anomalies1(points, original_segmentation):
     return np.rint(centers_of_mass).astype(int)
 
 
+anomalies_dict = {}
 for i in [3, 5, 6, 10, 17, 18, 19, 25, 44]:
     if i < 10:
         inverse_2D_segmentation, segmentation_3D = process_segmentation(f'/Users/elilevinkopf/Documents/Ex23A/FinalProject/test_output/task 509_sinus_bone/sinus_bone_00{i}.nii.gz')
@@ -285,7 +286,9 @@ for i in [3, 5, 6, 10, 17, 18, 19, 25, 44]:
         inverse_2D_segmentation, segmentation_3D = process_segmentation(f'/Users/elilevinkopf/Documents/Ex23A/FinalProject/test_output/task 509_sinus_bone/sinus_bone_0{i}.nii.gz')
     edges = find_dental_anomalies_edges1(inverse_2D_segmentation)
     anomalies = detect_dental_anomalies1(edges, segmentation_3D)
-    print(f'case{i}: {anomalies}')
+    anomalies_dict[f"case#{i}"] = anomalies
+print(anomalies_dict)
+    
 
 
 # def find_appropriate_points(points, matrix):
